@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", init);
 import { GLTFLoader } from './Includes/GLTFLoader.js';
 
+//There are many commented sections conatining models that we tried to use but failed due to model inconsistencies from the model itself
+
 var container;
 var camera, scene, renderer, light;
 var controls, water;
@@ -17,25 +19,20 @@ var parameters = {
 };
 var line;
 var cube = null, saitama = null, allMight = null;
-var mixer = null, mixer1 = null;
+var mixer = null;
 var punchSound = null, AllMightLaugh = null;
-var punchDur = null, punchTime = 0, punchAction = null, fly = null;
-var island, rock;
+var punchDur = null, punchTime = 0, punchAction = null;
+var island, rock, themeSong;
 
 clock = new THREE.Clock();
 var duration = 5000; // ms
 var currentTime = Date.now();
 var elapsedTime = 0;
 function animateScene() {
-/*var now = Date.now();
-var deltat = now - currentTime;
-currentTime = now;
-var fract = deltat / duration;
-var angle = Math.PI * 2 * fract;*/
 delta = clock.getDelta();
 if(saitama.position.y > 2.12)
 {
-	saitama.position.y-=delta*100;
+	saitama.position.y-=delta*10;
 }
 /*else if(allMight.position.y > -100){
 	AllMightLaugh.play();
@@ -43,17 +40,20 @@ if(saitama.position.y > 2.12)
 	allMight.position.y-=delta*120;
 }*/
 else{
+	if(punchTime == 0)
+		punchSound.play();
 	punchTime += delta;
-	punchSound.play();
-	punchSound.hasPlaybackControl = false;
 	saitama.position.x = 4;
-	if(punchTime > punchDur/0.275)
+	if(punchTime > punchDur/0.275){
 		punchAction.timeScale = 3;
-	if(punchTime > punchDur/0.27)
+	}
+	if(punchTime > punchDur/0.27){
 		cube.position.x -= delta * 250;
+	}
+	if(punchTime > punchDur / 0.18){
+		themeSong.play();
+	}
 	if ( mixer ) mixer.update( delta );
-	if ( !mixer ) mixer1.update( delta );
-	scene.remove(line);
 }
 
 }
@@ -154,14 +154,6 @@ function init() {
     light.shadow.camera.far = 200;
     scene.add(light);
 
-    var material = new THREE.LineBasicMaterial( { color: 0xffffff } );
-	var geometry = new THREE.Geometry();
-	geometry.vertices.push(new THREE.Vector3( -10, 0, 0) );
-	geometry.vertices.push(new THREE.Vector3( 0, 10, 0) );
-	geometry.vertices.push(new THREE.Vector3( 10, 0, 0) );
-	line = new THREE.Line( geometry, material );
-	scene.add( line );
-
 	for( var _key in models ){
 		(function(key){
 			
@@ -207,6 +199,7 @@ function init() {
 	// create a global audio source
 	punchSound = new THREE.Audio( listener );
 
+	themeSong = new THREE.Audio( listener);
 //	AllMightLaugh = new THREE.Audio( listener );
 
 	// load a sound and set it as the Audio object's buffer
@@ -216,6 +209,13 @@ function init() {
 		punchSound.setLoop( false );
 		punchSound.setVolume( 0.5 );
 	});
+
+	audioLoader.load( './22. Theme of ONE PUNCH MAN ~sadness~.mp3', function( buffer ) {
+		themeSong.setBuffer( buffer );
+		themeSong.setLoop( true );
+		themeSong.setVolume( 0.5 );
+	});
+	
 
 	/*audioLoader.load( 'all_might_laugh.mp3', function( buffer ) {
 		AllMightLaugh.setBuffer( buffer );
@@ -227,7 +227,7 @@ function init() {
 	// Load a glTF resource
 	loader.load(
 		// resource URL
-		'./Saitama (Problem)/Project_Final_problem_Cape.glb',
+		'./Saitama (Problem)/Project_Final_Problem_Cape.glb',
 		// called when the resource is loaded
 		function ( gltf ) {
 
@@ -240,6 +240,9 @@ function init() {
 			mixer.addEventListener( 'finished', () => {
 
 		    console.log('Done');
+		    camera.position.set(0, player.height, 18);
+        	controls.target = new THREE.Vector3(0,player.height,0);
+        	camera.lookAt(0,player.height,0);
 
 			} );
 			duration = gltf.animations[0].duration;
@@ -255,7 +258,7 @@ function init() {
 			saitama.position.y= -100;
 			saitama.position.x= 100;
 			saitama.rotation.y= 250;
-			saitama.position.set(300,2.12,0.8);
+			saitama.position.set(10,100,0.8);
 
 			scene.add( saitama );
 			
@@ -536,7 +539,7 @@ function onResourcesLoaded(){
 	meshes["tent1"].position.set(-5, 2, 10);
 	scene.add(meshes["tent1"]);
 	
-	meshes["tent2"].position.set(10, 2, 10);
+	meshes["tent2"].position.set(5, 2, 10);
 	scene.add(meshes["tent2"]);
 	
 	meshes["campfire1"].position.set(-5, 2, 7);
@@ -545,7 +548,7 @@ function onResourcesLoaded(){
 	scene.add(meshes["campfire1"]);
 	scene.add(meshes["campfire2"]);
 
-	meshes["pirateship"].position.set(15, -3, 15);
+	meshes["pirateship"].position.set(20, -3, 15);
 	meshes["pirateship"].rotation.set(0, 100, 0); // Rotate it to face the other way.
 	scene.add(meshes["pirateship"]);
 
