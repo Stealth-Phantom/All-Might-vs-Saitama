@@ -225,6 +225,8 @@ function init() {
 
 	themeSong.play();
 
+	console.log(themeSong);
+
     var loader = new GLTFLoader();
 	// Load a glTF resource
 	loader.load(
