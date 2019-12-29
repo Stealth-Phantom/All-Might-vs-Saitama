@@ -227,7 +227,7 @@ function init() {
 	// Load a glTF resource
 	loader.load(
 		// resource URL
-		'./Saitama (Problem)/Project_Final_Problem_Cape.glb',
+		'./Saitama/Project_Final_Problem_Cape.glb',
 		// called when the resource is loaded
 		function ( gltf ) {
 
