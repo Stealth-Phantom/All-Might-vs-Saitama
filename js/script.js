@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", init);
+import { GLTFLoader } from './Includes/GLTFLoader.js';
 
 var container;
 var camera, scene, renderer, light;
@@ -6,7 +7,7 @@ var controls, water;
 var time,delta,clock;
 var keyboard = {};
 var firstPerson = 0;
-var player = { height:1.8, speed:0.2, turnSpeed:Math.PI*0.02 };
+var player = { height:6, speed:0.2, turnSpeed:Math.PI*0.02 };
 var birdView ={ xPos:50,yPos:25,zPos:25,xLA:0,yLA:0,zLA:0};
 var upView ={ positionCamera:(50, 25, 25),LookAtCamera:(0,0,0)};
 var parameters = {
@@ -14,6 +15,48 @@ var parameters = {
     distortionScale: 3.7,
     alpha: 1.0
 };
+var line;
+var cube = null, saitama = null, allMight = null;
+var mixer = null, mixer1 = null;
+var punchSound = null, AllMightLaugh = null;
+var punchDur = null, punchTime = 0, punchAction = null, fly = null;
+var island, rock;
+
+clock = new THREE.Clock();
+var duration = 5000; // ms
+var currentTime = Date.now();
+var elapsedTime = 0;
+function animateScene() {
+/*var now = Date.now();
+var deltat = now - currentTime;
+currentTime = now;
+var fract = deltat / duration;
+var angle = Math.PI * 2 * fract;*/
+delta = clock.getDelta();
+if(saitama.position.y > 2.12)
+{
+	saitama.position.y-=delta*100;
+}
+/*else if(allMight.position.y > -100){
+	AllMightLaugh.play();
+	AllMightLaugh.hasPlaybackControl = false;
+	allMight.position.y-=delta*120;
+}*/
+else{
+	punchTime += delta;
+	punchSound.play();
+	punchSound.hasPlaybackControl = false;
+	saitama.position.x = 4;
+	if(punchTime > punchDur/0.275)
+		punchAction.timeScale = 3;
+	if(punchTime > punchDur/0.27)
+		cube.position.x -= delta * 250;
+	if ( mixer ) mixer.update( delta );
+	if ( !mixer ) mixer1.update( delta );
+	scene.remove(line);
+}
+
+}
 
 var loadingManager = null;
 var RESOURCES_LOADED = false;
@@ -46,7 +89,6 @@ var models = {
 var meshes = {};
 
 function init() {
-
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -91,7 +133,7 @@ function init() {
 		new THREE.MeshBasicMaterial({color:0xffffff, wireframe:false})
 	);
     meshFloor.rotation.x -= Math.PI / 2; // Rotate the floor 90 degrees
-    meshFloor.position.set(0, 0, 0);
+    meshFloor.position.set(0, -1.9, 0);
     camera.position.set(50, 25, 25);
     scene.add(meshFloor);
 
@@ -111,6 +153,14 @@ function init() {
     light.shadow.camera.near = 1;
     light.shadow.camera.far = 200;
     scene.add(light);
+
+    var material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+	var geometry = new THREE.Geometry();
+	geometry.vertices.push(new THREE.Vector3( -10, 0, 0) );
+	geometry.vertices.push(new THREE.Vector3( 0, 10, 0) );
+	geometry.vertices.push(new THREE.Vector3( 10, 0, 0) );
+	line = new THREE.Line( geometry, material );
+	scene.add( line );
 
 	for( var _key in models ){
 		(function(key){
@@ -146,23 +196,200 @@ function init() {
     container.appendChild(renderer.domElement);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.maxPolarAngle = Math.PI/2; 
     
     window.addEventListener('resize', onWindowResize, false);
 
-    animate();
-}
+    // create an AudioListener and add it to the camera
+	var listener = new THREE.AudioListener();
+	camera.add( listener );
+
+	// create a global audio source
+	punchSound = new THREE.Audio( listener );
+
+//	AllMightLaugh = new THREE.Audio( listener );
+
+	// load a sound and set it as the Audio object's buffer
+	var audioLoader = new THREE.AudioLoader();
+	audioLoader.load( './Audio.mp3', function( buffer ) {
+		punchSound.setBuffer( buffer );
+		punchSound.setLoop( false );
+		punchSound.setVolume( 0.5 );
+	});
+
+	/*audioLoader.load( 'all_might_laugh.mp3', function( buffer ) {
+		AllMightLaugh.setBuffer( buffer );
+		AllMightLaugh.setLoop( false );
+		AllMightLaugh.setVolume( 1 );
+	});*/
+
+    var loader = new GLTFLoader();
+	// Load a glTF resource
+	loader.load(
+		// resource URL
+		'./Saitama (Problem)/Project_Final_problem_Cape.glb',
+		// called when the resource is loaded
+		function ( gltf ) {
+
+			saitama = gltf.scene
+
+			saitama.scale.set(0.05,0.05,0.05);
+
+			mixer= new THREE.AnimationMixer(gltf.scene);
+
+			mixer.addEventListener( 'finished', () => {
+
+		    console.log('Done');
+
+			} );
+			duration = gltf.animations[0].duration;
+			console.log(gltf.animations);
+	    	punchAction = mixer.clipAction( gltf.animations[ 4 ] );
+	    	punchDur = gltf.animations[4].duration;
+	    	punchAction.timeScale = 0.1; //Sets animation time
+	    	punchAction.setLoop(THREE.loopRepeat,1);
+	    	punchAction.clampWhenFinished = true;
+			punchAction.play();
+			
+			saitama.position.z= -500;
+			saitama.position.y= -100;
+			saitama.position.x= 100;
+			saitama.rotation.y= 250;
+			saitama.position.set(300,2.12,0.8);
+
+			scene.add( saitama );
+			
+			
+
+		},
+		// called while loading is progressing
+		function ( xhr ) {
+
+			console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+		},
+		// called when loading has errors
+		function ( error ) {
+
+			console.log( error );
+
+		}
+	);
+
+	loader.load(
+		// resource URL
+		'./island/scene.gltf',
+		// called when the resource is loaded
+		function ( gltf ) {
+
+			island = gltf.scene;
+			island.scale.set(10,10,10);
+			scene.add(gltf.scene);
+
+			island.position.set(0,3,0);
+		}
+		);
+
+/*	loader.load(
+		// resource URL
+		'./Small rock/untitled.gltf',
+		// called when the resource is loaded
+		function ( gltf ) {
+
+			rock = gltf.scene;
+			scene.add(gltf.scene);
+
+			rock.position.set(10,10,0);
+		}
+		);*/
+
+/*
+	loader.load(
+		// resource URL
+		'./All-Might/scene.gltf',
+		// called when the resource is loaded
+		function ( gltf ) {
+
+			allMight = gltf.scene
+			scene.add( allMight );
+			allMight.scale.set(0.05,0.05,0.05);
+			mixer1= new THREE.AnimationMixer(gltf.scene);
+
+			mixer1.addEventListener( 'finished', () => {
+
+		    console.log('Done1');
+
+			} );
+			console.log(gltf.animations);
+	    	var action = mixer1.clipAction( gltf.animations[ 0 ] );
+	    	action.timeScale = 1; //Sets animation time
+	    	action.setLoop(THREE.loopRepeat,1);
+	    	action.clampWhenFinished = true;
+			action.play();
+			allMight.position.z= -500;
+			allMight.position.y= -100;
+			allMight.position.x= -100;
+			allMight.rotation.y= -250;
+			allMight.position.set(-10,5,0);
+
+		},
+		// called while loading is progressing
+		function ( xhr ) {
+
+			console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+		},
+		// called when loading has errors
+		function ( error ) {
+
+			console.log( 'An error happened' );
+
+		}
+	);*/
+	// Create a texture-mapped cube and add it to the scene
+	// First, create the texture map
+	// Add a directional light to show off the object
+
+	//CUBE EXAMPLE
+
+
+	// Create a shaded, texture-mapped cube and add it to the scene
+	// First, create the texture map
+	var mapUrl = "./images/Test1.jpg";
+	var map = THREE.ImageUtils.loadTexture(mapUrl);
+	// Now, create a Phong material to show shading; pass in the map
+	var material = new THREE.MeshPhongMaterial({ map: map });
+	// Create the cube geometry
+	var geometry = new THREE.CubeGeometry(10,10 , 10);
+	// And put the geometry and material together into a mesh
+	cube = new THREE.Mesh(geometry, material);
+	// Move the mesh back from the camera and tilt it toward
+	// the viewer
+	cube.position.set(-4,6,0);
+	// Finally, add the mesh to our scene
+	scene.add( cube );
+	// Run the run loop
+
+
+	//LOADING MODELS EXAMPLE
+
+//	camera.position.set(0, player.height, -5);
+
+	animate();
+ }
+
+var animate = function () {
+
+    requestAnimationFrame(animate);
+    animateScene();
+    render();
+};
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
-var animate = function () {
-
-    requestAnimationFrame(animate);
-    render();
-};
 
 function render() {
    if( RESOURCES_LOADED == false ){
@@ -171,7 +398,6 @@ function render() {
 	}
 	
 	time = Date.now()*0.005;
-	delta = clock.getDelta();
     if(firstPerson == 0){
         controls.update();
     }else{
@@ -180,7 +406,7 @@ function render() {
 	updateShip();
 	updateWater();
 	updateClouds();
-    renderer.render(scene, camera);
+	renderer.render(scene,camera);
 }
 
 function updateMotion(){
@@ -223,9 +449,9 @@ function updateWater(){
 }
 function updateClouds(){
 	meshes["cloud1"].position.z += 0.2;
-	meshes["cloud2"].position.z += 0.2;
-	meshes["cloud3"].position.z += 0.2;
-	meshes["cloud4"].position.z += 0.2;
+	meshes["cloud2"].position.z -= 0.2;
+	meshes["cloud3"].position.x += 0.2;
+	meshes["cloud4"].position.x -= 0.2;
 	meshes["cloud5"].position.z += 0.2;
 }
 
@@ -244,8 +470,9 @@ addEventListener('keypress',function(){
 		birdView.xPos=camera.lookAt.x;
 		birdView.yPos=camera.lookAt.y;
 		birdView.zPos=camera.lookAt.z;
-        camera.position.set(0, player.height, -5);
-        camera.lookAt(new THREE.Vector3(0,player.height,0));
+        camera.position.set(0, player.height, 18);
+        controls.target = new THREE.Vector3(0,player.height,0);
+        camera.lookAt(0,player.height,0);
         controls.enable=false;
 		controls.enableKeys=false;
 
@@ -306,14 +533,14 @@ function onResourcesLoaded(){
 	meshes["cloud5"] = models.clouds.mesh.clone();
 	
 	// Reposition individual meshes, then add meshes to scene
-	meshes["tent1"].position.set(-5, 0, 4);
+	meshes["tent1"].position.set(-5, 2, 10);
 	scene.add(meshes["tent1"]);
 	
-	meshes["tent2"].position.set(-8, 0, 4);
+	meshes["tent2"].position.set(10, 2, 10);
 	scene.add(meshes["tent2"]);
 	
-	meshes["campfire1"].position.set(-5, 0, 1);
-	meshes["campfire2"].position.set(-8, 0, 1);
+	meshes["campfire1"].position.set(-5, 2, 7);
+	meshes["campfire2"].position.set(10, 2, 7);
 	
 	scene.add(meshes["campfire1"]);
 	scene.add(meshes["campfire2"]);
@@ -329,10 +556,10 @@ function onResourcesLoaded(){
 	meshes["cloud5"].position.set(50,150,-120);
 
 	meshes["cloud1"].scale.set(0.1,0.1,0.1);
-	meshes["cloud2"].scale.set(0.1,0.1,0.1);
+	meshes["cloud2"].scale.set(0.4,0.4,0.4);
 	meshes["cloud3"].scale.set(0.1,0.1,0.1);
-	meshes["cloud4"].scale.set(0.1,0.1,0.1);
-	meshes["cloud5"].scale.set(0.1,0.1,0.1);
+	meshes["cloud4"].scale.set(0.05,0.05,0.05);
+	meshes["cloud5"].scale.set(0.2,0.2,0.2);
 
 	scene.add(meshes["cloud1"]);
 	scene.add(meshes["cloud2"]);
