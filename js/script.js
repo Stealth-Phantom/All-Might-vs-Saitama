@@ -223,6 +223,8 @@ function init() {
 		AllMightLaugh.setVolume( 1 );
 	});*/
 
+	themeSong.play();
+
     var loader = new GLTFLoader();
 	// Load a glTF resource
 	loader.load(
