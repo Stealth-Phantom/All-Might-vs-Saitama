@@ -223,13 +223,11 @@ function init() {
 		AllMightLaugh.setVolume( 1 );
 	});*/
 
-	themeSong.play();
-
 	console.log(themeSong);
 
     var loader = new GLTFLoader();
 	// Load a glTF resource
-	loader.load(
+	/*loader.load(
 		// resource URL
 		'./Saitama/Project_Final_Problem_Cape.glb',
 		// called when the resource is loaded
@@ -281,7 +279,7 @@ function init() {
 			console.log( error );
 
 		}
-	);
+	);*/
 
 	loader.load(
 		// resource URL
@@ -388,7 +386,7 @@ function init() {
 var animate = function () {
 
     requestAnimationFrame(animate);
-    animateScene();
+    //animateScene();
     render();
 };
 
