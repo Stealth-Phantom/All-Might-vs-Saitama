@@ -227,9 +227,9 @@ function init() {
 
     var loader = new GLTFLoader();
 	// Load a glTF resource
-	/*loader.load(
+	loader.load(
 		// resource URL
-		'./Saitama/Project_Final_Problem_Cape.glb',
+		'./Saitama/Project_Final_problem_Cape.glb',
 		// called when the resource is loaded
 		function ( gltf ) {
 
@@ -279,11 +279,11 @@ function init() {
 			console.log( error );
 
 		}
-	);*/
+	);
 
 	loader.load(
 		// resource URL
-		'./island/scene.gltf',
+		'./Island/scene.gltf',
 		// called when the resource is loaded
 		function ( gltf ) {
 
@@ -360,7 +360,7 @@ function init() {
 
 	// Create a shaded, texture-mapped cube and add it to the scene
 	// First, create the texture map
-	var mapUrl = "./images/Test1.jpg";
+	var mapUrl = "./Images/Test1.jpg";
 	var map = THREE.ImageUtils.loadTexture(mapUrl);
 	// Now, create a Phong material to show shading; pass in the map
 	var material = new THREE.MeshPhongMaterial({ map: map });
@@ -386,7 +386,7 @@ function init() {
 var animate = function () {
 
     requestAnimationFrame(animate);
-    //animateScene();
+    animateScene();
     render();
 };
 
