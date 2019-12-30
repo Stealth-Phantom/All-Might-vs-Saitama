@@ -134,7 +134,7 @@ function init() {
 	);
     meshFloor.rotation.x -= Math.PI / 2; // Rotate the floor 90 degrees
     meshFloor.position.set(0, -1.9, 0);
-    camera.position.set(50, 25, 25);
+    camera.position.set(50, 50, 50);
     scene.add(meshFloor);
 
     var ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
